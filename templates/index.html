@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confession Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>💗 Confession Feed</h1>
+
+<form method="post">
+    <textarea name="message" placeholder="Write your confession..." required></textarea>
+    <br><br>
+    <button>Post</button>
+</form>
+
+<hr>
+
+{% for post in posts %}
+<div class="post-box">
+    <p>{{ post[1] }}</p>
+
+    <div class="like-row">
+        <a href="/like/{{ post[0] }}">
+            ❤️ Like
+        </a>
+        <span>{{ post[2] }} Likes</span>
+    </div>
+</div>
+{% endfor %}
+
+</body>
+</html>

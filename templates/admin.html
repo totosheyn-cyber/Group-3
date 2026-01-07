@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>🔧 Admin Panel</h1>
+
+{% for post in posts %}
+<div class="post-box">
+    <p>{{ post[1] }}</p>
+    <small>❤️ {{ post[2] }} Likes</small>
+    <br><br>
+    <a href="/delete/{{ post[0] }}">
+        <button>Delete</button>
+    </a>
+</div>
+{% endfor %}
+
+</body>
+</html>
