@@ -17,11 +17,17 @@ def create_table():
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT,
+            emoji TEXT,
             likes INTEGER DEFAULT 0
         )
     """)
 
-    # Try adding likes column if old DB exists
+    # Try adding columns if old DB exists
+    try:
+        c.execute("ALTER TABLE posts ADD COLUMN emoji TEXT")
+    except:
+        pass
+
     try:
         c.execute("ALTER TABLE posts ADD COLUMN likes INTEGER DEFAULT 0")
     except:
@@ -40,7 +46,11 @@ def index():
 
     if request.method == "POST":
         msg = request.form["message"]
-        c.execute("INSERT INTO posts (message, likes) VALUES (?, 0)", (msg,))
+        emoji = request.form["emoji"]
+        c.execute(
+            "INSERT INTO posts (message, emoji, likes) VALUES (?, ?, 0)",
+            (msg, emoji)
+        )
         db.commit()
 
     c.execute("SELECT * FROM posts ORDER BY id DESC")
@@ -59,7 +69,7 @@ def like(id):
     db.close()
     return redirect("/")
 
-# ---------- ADMIN LOGIN ----------
+# ---------- ADMIN ----------
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
@@ -70,12 +80,12 @@ def admin():
 
     if not session.get("admin"):
         return '''
-            <form method="post" style="text-align:center;padding:50px;">
-                <h3>Admin Login</h3>
-                <input type="password" name="password" placeholder="Password">
-                <br><br>
-                <button>Login</button>
-            </form>
+        <form method="post" style="text-align:center;padding:50px;">
+            <h3>Admin Login</h3>
+            <input type="password" name="password">
+            <br><br>
+            <button>Login</button>
+        </form>
         '''
 
     db = get_db()
@@ -86,7 +96,7 @@ def admin():
 
     return render_template("admin.html", posts=posts)
 
-# ---------- DELETE POST ----------
+# ---------- DELETE ----------
 @app.route("/delete/<int:id>")
 def delete(id):
     if not session.get("admin"):
@@ -102,5 +112,4 @@ def delete(id):
 
 # ---------- RUN ----------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-
+    app.run(debug=True)

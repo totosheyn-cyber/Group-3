@@ -10,6 +10,16 @@
 <h1>💗 Anonymous Confession</h1>
 
 <form method="post">
+
+    <!-- Emoji selector -->
+    <div class="emoji-row">
+        <label><input type="radio" name="emoji" value="😊" required> 😊</label>
+        <label><input type="radio" name="emoji" value="😭"> 😭</label>
+        <label><input type="radio" name="emoji" value="😡"> 😡</label>
+        <label><input type="radio" name="emoji" value="😍"> 😍</label>
+        <label><input type="radio" name="emoji" value="😱"> 😱</label>
+    </div>
+
     <textarea name="message" placeholder="Write your confession..." required></textarea>
     <br><br>
     <button>Post</button>
@@ -19,13 +29,12 @@
 
 {% for post in posts %}
 <div class="post-box">
+    <div class="emoji-display">{{ post[2] }}</div>
     <p>{{ post[1] }}</p>
 
     <div class="like-row">
-        <a href="/like/{{ post[0] }}">
-            ❤️ Like
-        </a>
-        <span>{{ post[2] }} Likes</span>
+        <a href="/like/{{ post[0] }}">❤️ Like</a>
+        <span>{{ post[3] }} Likes</span>
     </div>
 </div>
 {% endfor %}

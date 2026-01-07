@@ -44,7 +44,29 @@ button {
     margin: 12px auto;
     border-radius: 12px;
     max-width: 600px;
-    word-wrap: break-word;
+}
+
+.emoji-row {
+    display: flex;
+    justify-content: space-around;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.emoji-row input {
+    display: none;
+}
+
+.emoji-row label {
+    cursor: pointer;
+}
+
+.emoji-row input:checked + span {
+    transform: scale(1.3);
+}
+
+.emoji-display {
+    font-size: 30px;
 }
 
 .like-row {
@@ -59,18 +81,9 @@ button {
     font-weight: bold;
 }
 
-/* 📱 Mobile Optimization */
+/* Mobile */
 @media (max-width: 600px) {
     h1 {
         font-size: 20px;
-    }
-
-    textarea {
-        height: 80px;
-    }
-
-    button {
-        font-size: 14px;
-        padding: 10px;
     }
 }
