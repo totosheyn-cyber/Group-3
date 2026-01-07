@@ -11,7 +11,7 @@
 
 <form method="post">
 
-    <!-- Emoji selector -->
+    <!-- Emoji -->
     <div class="emoji-row">
         <label><input type="radio" name="emoji" value="😊" required> 😊</label>
         <label><input type="radio" name="emoji" value="😭"> 😭</label>
@@ -19,6 +19,17 @@
         <label><input type="radio" name="emoji" value="😍"> 😍</label>
         <label><input type="radio" name="emoji" value="😱"> 😱</label>
     </div>
+
+    <!-- Grade -->
+    <select name="grade" required class="grade-select">
+        <option value="">Select Grade</option>
+        <option>Grade 7</option>
+        <option>Grade 8</option>
+        <option>Grade 9</option>
+        <option>Grade 10</option>
+        <option>Grade 11</option>
+        <option>Grade 12</option>
+    </select>
 
     <textarea name="message" placeholder="Write your confession..." required></textarea>
     <br><br>
@@ -30,11 +41,12 @@
 {% for post in posts %}
 <div class="post-box">
     <div class="emoji-display">{{ post[2] }}</div>
+    <small class="grade-label">{{ post[3] }}</small>
     <p>{{ post[1] }}</p>
 
     <div class="like-row">
         <a href="/like/{{ post[0] }}">❤️ Like</a>
-        <span>{{ post[3] }} Likes</span>
+        <span>{{ post[4] }} Likes</span>
     </div>
 </div>
 {% endfor %}

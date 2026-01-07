@@ -18,20 +18,17 @@ def create_table():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT,
             emoji TEXT,
+            grade TEXT,
             likes INTEGER DEFAULT 0
         )
     """)
 
     # Try adding columns if old DB exists
-    try:
-        c.execute("ALTER TABLE posts ADD COLUMN emoji TEXT")
-    except:
-        pass
-
-    try:
-        c.execute("ALTER TABLE posts ADD COLUMN likes INTEGER DEFAULT 0")
-    except:
-        pass
+    for column in ["emoji TEXT", "grade TEXT", "likes INTEGER DEFAULT 0"]:
+        try:
+            c.execute(f"ALTER TABLE posts ADD COLUMN {column}")
+        except:
+            pass
 
     db.commit()
     db.close()
@@ -47,9 +44,11 @@ def index():
     if request.method == "POST":
         msg = request.form["message"]
         emoji = request.form["emoji"]
+        grade = request.form["grade"]
+
         c.execute(
-            "INSERT INTO posts (message, emoji, likes) VALUES (?, ?, 0)",
-            (msg, emoji)
+            "INSERT INTO posts (message, emoji, grade, likes) VALUES (?, ?, ?, 0)",
+            (msg, emoji, grade)
         )
         db.commit()
 
@@ -59,7 +58,7 @@ def index():
 
     return render_template("index.html", posts=posts)
 
-# ---------- LIKE POST ----------
+# ---------- LIKE ----------
 @app.route("/like/<int:id>")
 def like(id):
     db = get_db()
