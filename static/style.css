@@ -91,3 +91,15 @@ button {
         font-size: 20px;
     }
 }
+
+.comments {
+    background: #fff0f6;
+    padding: 6px;
+    border-radius: 6px;
+    margin-top: 5px;
+}
+
+.comment {
+    font-size: 14px;
+    margin-bottom: 4px;
+}

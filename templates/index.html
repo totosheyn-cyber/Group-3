@@ -7,11 +7,17 @@
 </head>
 <body>
 
+<div class="top-bar">
+    <span>👤 {{ user }}</span>
+    <div>
+        <a href="/profile">🔔 {{ notif_count }}</a> |
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
 <h1>💗 Anonymous Confession</h1>
 
 <form method="post">
-
-    <!-- Emoji -->
     <div class="emoji-row">
         <label><input type="radio" name="emoji" value="😊" required> 😊</label>
         <label><input type="radio" name="emoji" value="😭"> 😭</label>
@@ -20,19 +26,7 @@
         <label><input type="radio" name="emoji" value="😱"> 😱</label>
     </div>
 
-    <!-- Grade -->
-    <select name="grade" required class="grade-select">
-        <option value="">Select Grade</option>
-        <option>Grade 7</option>
-        <option>Grade 8</option>
-        <option>Grade 9</option>
-        <option>Grade 10</option>
-        <option>Grade 11</option>
-        <option>Grade 12</option>
-    </select>
-
     <textarea name="message" placeholder="Write your confession..." required></textarea>
-    <br><br>
     <button>Post</button>
 </form>
 
@@ -41,13 +35,29 @@
 {% for post in posts %}
 <div class="post-box">
     <div class="emoji-display">{{ post[2] }}</div>
-    <small class="grade-label">{{ post[3] }}</small>
+    <small>👤 {{ post[3] }}</small>
     <p>{{ post[1] }}</p>
 
     <div class="like-row">
         <a href="/like/{{ post[0] }}">❤️ Like</a>
         <span>{{ post[4] }} Likes</span>
     </div>
+
+    <!-- COMMENTS -->
+    <div class="comments">
+        {% for c in comments %}
+            {% if c[1] == post[0] %}
+                <div class="comment">
+                    <b>{{ c[2] }}</b>: {{ c[3] }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <form action="/comment/{{ post[0] }}" method="post">
+        <input name="comment" placeholder="Write a comment..." required>
+        <button>Reply</button>
+    </form>
 </div>
 {% endfor %}
 

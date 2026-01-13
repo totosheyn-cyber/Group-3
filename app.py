@@ -4,61 +4,214 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# ---------- DATABASE ----------
+# ---------------- DATABASE ----------------
 def get_db():
     return sqlite3.connect("confessions.db")
 
-def create_table():
+def create_tables():
     db = get_db()
     c = db.cursor()
 
-    # Create table
+    # Users
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    """)
+
+    # Posts
     c.execute("""
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT,
             emoji TEXT,
-            grade TEXT,
+            username TEXT,
             likes INTEGER DEFAULT 0
         )
     """)
 
-    # Try adding columns if old DB exists
-    for column in ["emoji TEXT", "grade TEXT", "likes INTEGER DEFAULT 0"]:
-        try:
-            c.execute(f"ALTER TABLE posts ADD COLUMN {column}")
-        except:
-            pass
+    # Comments
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER,
+            username TEXT,
+            comment TEXT
+        )
+    """)
+
+    # Notifications
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            text TEXT,
+            seen INTEGER DEFAULT 0
+        )
+    """)
 
     db.commit()
     db.close()
 
-create_table()
+create_tables()
 
-# ---------- HOME PAGE ----------
+# ---------------- REGISTER ----------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        try:
+            db = get_db()
+            c = db.cursor()
+            c.execute("INSERT INTO users VALUES (NULL, ?, ?)", (username, password))
+            db.commit()
+            db.close()
+            return redirect("/login")
+        except:
+            return "Username already exists!"
+
+    return render_template("register.html")
+
+# ---------------- LOGIN ----------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        db = get_db()
+        c = db.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = c.fetchone()
+        db.close()
+
+        if user:
+            session["user"] = username
+            return redirect("/")
+        return "Invalid login!"
+
+    return render_template("login.html")
+
+# ---------------- LOGOUT ----------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
+# ---------------- HOME ----------------
 @app.route("/", methods=["GET", "POST"])
 def index():
+    if not session.get("user"):
+        return redirect("/login")
+
     db = get_db()
     c = db.cursor()
 
+    # Create post
     if request.method == "POST":
         msg = request.form["message"]
         emoji = request.form["emoji"]
-        grade = request.form["grade"]
+        username = session["user"]
 
         c.execute(
-            "INSERT INTO posts (message, emoji, grade, likes) VALUES (?, ?, ?, 0)",
-            (msg, emoji, grade)
+            "INSERT INTO posts (message, emoji, username, likes) VALUES (?, ?, ?, 0)",
+            (msg, emoji, username)
         )
         db.commit()
 
+    # Load posts
     c.execute("SELECT * FROM posts ORDER BY id DESC")
     posts = c.fetchall()
+
+    # Load comments
+    c.execute("SELECT * FROM comments")
+    comments = c.fetchall()
+
+    # Notification count
+    c.execute(
+        "SELECT COUNT(*) FROM notifications WHERE username=? AND seen=0",
+        (session["user"],)
+    )
+    notif_count = c.fetchone()[0]
+
     db.close()
 
-    return render_template("index.html", posts=posts)
+    return render_template(
+        "index.html",
+        posts=posts,
+        comments=comments,
+        user=session["user"],
+        notif_count=notif_count
+    )
 
-# ---------- LIKE ----------
+# ---------------- COMMENT ----------------
+@app.route("/comment/<int:post_id>", methods=["POST"])
+def comment(post_id):
+    if not session.get("user"):
+        return redirect("/login")
+
+    text = request.form["comment"]
+    username = session["user"]
+
+    db = get_db()
+    c = db.cursor()
+
+    # Save comment
+    c.execute(
+        "INSERT INTO comments (post_id, username, comment) VALUES (?, ?, ?)",
+        (post_id, username, text)
+    )
+
+    # Find post owner
+    c.execute("SELECT username FROM posts WHERE id=?", (post_id,))
+    owner = c.fetchone()[0]
+
+    # Create notification (if not self)
+    if owner != username:
+        c.execute(
+            "INSERT INTO notifications (username, text, seen) VALUES (?, ?, 0)",
+            (owner, f"{username} commented on your post")
+        )
+
+    db.commit()
+    db.close()
+    return redirect("/")
+
+# ---------------- PROFILE ----------------
+@app.route("/profile")
+def profile():
+    if not session.get("user"):
+        return redirect("/login")
+
+    username = session["user"]
+    db = get_db()
+    c = db.cursor()
+
+    # User posts
+    c.execute("SELECT * FROM posts WHERE username=? ORDER BY id DESC", (username,))
+    my_posts = c.fetchall()
+
+    # Notifications
+    c.execute("SELECT * FROM notifications WHERE username=? ORDER BY id DESC", (username,))
+    notifications = c.fetchall()
+
+    # Mark notifications as seen
+    c.execute("UPDATE notifications SET seen=1 WHERE username=?", (username,))
+    db.commit()
+    db.close()
+
+    return render_template(
+        "profile.html",
+        user=username,
+        posts=my_posts,
+        notifications=notifications
+    )
+
+# ---------------- LIKE ----------------
 @app.route("/like/<int:id>")
 def like(id):
     db = get_db()
@@ -68,47 +221,6 @@ def like(id):
     db.close()
     return redirect("/")
 
-# ---------- ADMIN ----------
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-    if request.method == "POST":
-        if request.form["password"] == "admin123":
-            session["admin"] = True
-        else:
-            return "Wrong password!"
-
-    if not session.get("admin"):
-        return '''
-        <form method="post" style="text-align:center;padding:50px;">
-            <h3>Admin Login</h3>
-            <input type="password" name="password">
-            <br><br>
-            <button>Login</button>
-        </form>
-        '''
-
-    db = get_db()
-    c = db.cursor()
-    c.execute("SELECT * FROM posts ORDER BY id DESC")
-    posts = c.fetchall()
-    db.close()
-
-    return render_template("admin.html", posts=posts)
-
-# ---------- DELETE ----------
-@app.route("/delete/<int:id>")
-def delete(id):
-    if not session.get("admin"):
-        return "Unauthorized"
-
-    db = get_db()
-    c = db.cursor()
-    c.execute("DELETE FROM posts WHERE id=?", (id,))
-    db.commit()
-    db.close()
-
-    return redirect("/admin")
-
-# ---------- RUN ----------
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
