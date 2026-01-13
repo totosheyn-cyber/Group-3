@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Anonymous Confession</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -23,7 +23,6 @@
         <label><input type="radio" name="emoji" value="😭"> 😭</label>
         <label><input type="radio" name="emoji" value="😡"> 😡</label>
         <label><input type="radio" name="emoji" value="😍"> 😍</label>
-        <label><input type="radio" name="emoji" value="😱"> 😱</label>
     </div>
 
     <textarea name="message" placeholder="Write your confession..." required></textarea>
@@ -43,10 +42,9 @@
         <span>{{ post[4] }} Likes</span>
     </div>
 
-    <!-- COMMENTS -->
     <div class="comments">
         {% for c in comments %}
-            {% if c[1] == post[0] %}
+            {% if c[1]|int == post[0]|int %}
                 <div class="comment">
                     <b>{{ c[2] }}</b>: {{ c[3] }}
                 </div>
@@ -55,7 +53,7 @@
     </div>
 
     <form action="/comment/{{ post[0] }}" method="post">
-        <input name="comment" placeholder="Write a comment..." required>
+        <input name="comment" placeholder="Write a reply..." required>
         <button>Reply</button>
     </form>
 </div>

@@ -1,105 +1,56 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #ffe6f2;
-    margin: 0;
+    font-family: Arial;
+    background: #ffe6f0;
     padding: 10px;
 }
 
-h1 {
+h1, h2 {
     text-align: center;
-    color: #ff2f92;
-    font-size: 24px;
-}
-
-form {
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    max-width: 600px;
-    margin: auto;
-}
-
-textarea {
-    width: 100%;
-    height: 90px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    padding: 8px;
-    font-size: 16px;
-}
-
-.grade-select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 8px;
-}
-
-button {
-    width: 100%;
-    background: #ff2f92;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 16px;
 }
 
 .post-box {
     background: white;
-    padding: 12px;
-    margin: 12px auto;
-    border-radius: 12px;
-    max-width: 600px;
-}
-
-.emoji-row {
-    display: flex;
-    justify-content: space-around;
-    font-size: 24px;
+    padding: 10px;
+    border-radius: 10px;
     margin-bottom: 10px;
 }
 
-.emoji-row input {
-    display: none;
+textarea, input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
-.emoji-display {
-    font-size: 30px;
+button {
+    background: hotpink;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    margin-top: 5px;
 }
 
-.grade-label {
-    color: #ff2f92;
-    font-weight: bold;
-}
-
-.like-row {
+.top-bar {
     display: flex;
     justify-content: space-between;
-    margin-top: 8px;
+    background: white;
+    padding: 8px;
+    border-radius: 10px;
 }
 
-.like-row a {
-    text-decoration: none;
-    color: #ff2f92;
-    font-weight: bold;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-    h1 {
-        font-size: 20px;
-    }
+.emoji-row label {
+    margin-right: 10px;
 }
 
 .comments {
     background: #fff0f6;
-    padding: 6px;
-    border-radius: 6px;
+    padding: 5px;
+    border-radius: 5px;
     margin-top: 5px;
 }
 
 .comment {
     font-size: 14px;
-    margin-bottom: 4px;
 }

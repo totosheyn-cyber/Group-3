@@ -12,7 +12,6 @@ def create_tables():
     db = get_db()
     c = db.cursor()
 
-    # Users
     c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +20,6 @@ def create_tables():
         )
     """)
 
-    # Posts
     c.execute("""
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +30,6 @@ def create_tables():
         )
     """)
 
-    # Comments
     c.execute("""
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +39,6 @@ def create_tables():
         )
     """)
 
-    # Notifications
     c.execute("""
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,13 +57,13 @@ create_tables()
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        u = request.form["username"]
+        p = request.form["password"]
 
         try:
             db = get_db()
             c = db.cursor()
-            c.execute("INSERT INTO users VALUES (NULL, ?, ?)", (username, password))
+            c.execute("INSERT INTO users VALUES (NULL, ?, ?)", (u, p))
             db.commit()
             db.close()
             return redirect("/login")
@@ -80,17 +76,17 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        u = request.form["username"]
+        p = request.form["password"]
 
         db = get_db()
         c = db.cursor()
-        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (u, p))
         user = c.fetchone()
         db.close()
 
         if user:
-            session["user"] = username
+            session["user"] = u
             return redirect("/")
         return "Invalid login!"
 
@@ -113,22 +109,23 @@ def index():
 
     # Create post
     if request.method == "POST":
-        msg = request.form["message"]
-        emoji = request.form["emoji"]
-        username = session["user"]
+        msg = request.form.get("message")
+        emoji = request.form.get("emoji")
+        user = session["user"]
 
-        c.execute(
-            "INSERT INTO posts (message, emoji, username, likes) VALUES (?, ?, ?, 0)",
-            (msg, emoji, username)
-        )
-        db.commit()
+        if msg and emoji:
+            c.execute(
+                "INSERT INTO posts (message, emoji, username, likes) VALUES (?, ?, ?, 0)",
+                (msg, emoji, user)
+            )
+            db.commit()
 
     # Load posts
     c.execute("SELECT * FROM posts ORDER BY id DESC")
     posts = c.fetchall()
 
     # Load comments
-    c.execute("SELECT * FROM comments")
+    c.execute("SELECT * FROM comments ORDER BY id ASC")
     comments = c.fetchall()
 
     # Notification count
@@ -154,8 +151,11 @@ def comment(post_id):
     if not session.get("user"):
         return redirect("/login")
 
-    text = request.form["comment"]
-    username = session["user"]
+    text = request.form.get("comment")
+    user = session["user"]
+
+    if not text:
+        return redirect("/")
 
     db = get_db()
     c = db.cursor()
@@ -163,22 +163,24 @@ def comment(post_id):
     # Save comment
     c.execute(
         "INSERT INTO comments (post_id, username, comment) VALUES (?, ?, ?)",
-        (post_id, username, text)
+        (post_id, user, text)
     )
 
     # Find post owner
     c.execute("SELECT username FROM posts WHERE id=?", (post_id,))
-    owner = c.fetchone()[0]
+    row = c.fetchone()
 
-    # Create notification (if not self)
-    if owner != username:
-        c.execute(
-            "INSERT INTO notifications (username, text, seen) VALUES (?, ?, 0)",
-            (owner, f"{username} commented on your post")
-        )
+    if row:
+        owner = row[0]
+        if owner != user:
+            c.execute(
+                "INSERT INTO notifications (username, text, seen) VALUES (?, ?, 0)",
+                (owner, f"{user} replied to your post")
+            )
 
     db.commit()
     db.close()
+
     return redirect("/")
 
 # ---------------- PROFILE ----------------
@@ -187,26 +189,24 @@ def profile():
     if not session.get("user"):
         return redirect("/login")
 
-    username = session["user"]
+    user = session["user"]
     db = get_db()
     c = db.cursor()
 
-    # User posts
-    c.execute("SELECT * FROM posts WHERE username=? ORDER BY id DESC", (username,))
+    c.execute("SELECT * FROM posts WHERE username=? ORDER BY id DESC", (user,))
     my_posts = c.fetchall()
 
-    # Notifications
-    c.execute("SELECT * FROM notifications WHERE username=? ORDER BY id DESC", (username,))
+    c.execute("SELECT * FROM notifications WHERE username=? ORDER BY id DESC", (user,))
     notifications = c.fetchall()
 
-    # Mark notifications as seen
-    c.execute("UPDATE notifications SET seen=1 WHERE username=?", (username,))
+    # Mark notifications seen
+    c.execute("UPDATE notifications SET seen=1 WHERE username=?", (user,))
     db.commit()
     db.close()
 
     return render_template(
         "profile.html",
-        user=username,
+        user=user,
         posts=my_posts,
         notifications=notifications
     )

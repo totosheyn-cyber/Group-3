@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Profile</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -12,13 +11,13 @@
     <a href="/logout">Logout</a>
 </div>
 
-<h1>👤 {{ user }}</h1>
+<h2>👤 {{ user }}</h2>
 
 <h3>🔔 Notifications</h3>
 {% for n in notifications %}
-    <div class="post-box">{{ n[2] }}</div>
+<div class="post-box">{{ n[2] }}</div>
 {% else %}
-    <p>No notifications.</p>
+<p>No notifications.</p>
 {% endfor %}
 
 <hr>
@@ -26,9 +25,7 @@
 <h3>📜 My Confessions</h3>
 {% for post in posts %}
 <div class="post-box">
-    <div class="emoji-display">{{ post[2] }}</div>
-    <p>{{ post[1] }}</p>
-    <small>❤️ {{ post[4] }} Likes</small>
+    {{ post[2] }} {{ post[1] }} ❤️ {{ post[4] }}
 </div>
 {% else %}
 <p>No posts yet.</p>
