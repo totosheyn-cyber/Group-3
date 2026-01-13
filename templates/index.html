@@ -2,13 +2,14 @@
 <html>
 <head>
     <title>Anonymous Confession</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
+<!-- Top Navigation -->
 <div class="top-bar">
-    <span>👤 {{ user }}</span>
+    <div>👤 {{ user }}</div>
     <div>
         <a href="/profile">🔔 {{ notif_count }}</a> |
         <a href="/logout">Logout</a>
@@ -17,45 +18,74 @@
 
 <h1>💗 Anonymous Confession</h1>
 
+<!-- Create Post -->
+<div class="post-box">
 <form method="post">
+
     <div class="emoji-row">
-        <label><input type="radio" name="emoji" value="😊" required> 😊</label>
-        <label><input type="radio" name="emoji" value="😭"> 😭</label>
-        <label><input type="radio" name="emoji" value="😡"> 😡</label>
-        <label><input type="radio" name="emoji" value="😍"> 😍</label>
+        <label>
+            <input type="radio" name="emoji" value="😊" required>
+            😊
+        </label>
+        <label>
+            <input type="radio" name="emoji" value="😭">
+            😭
+        </label>
+        <label>
+            <input type="radio" name="emoji" value="😡">
+            😡
+        </label>
+        <label>
+            <input type="radio" name="emoji" value="😍">
+            😍
+        </label>
+        <label>
+            <input type="radio" name="emoji" value="🤔">
+            🤔
+        </label>
     </div>
 
     <textarea name="message" placeholder="Write your confession..." required></textarea>
-    <button>Post</button>
+    <button>Post Confession</button>
 </form>
+</div>
 
-<hr>
+<div style="height:15px;"></div>
 
+<!-- Feed -->
 {% for post in posts %}
 <div class="post-box">
-    <div class="emoji-display">{{ post[2] }}</div>
-    <small>👤 {{ post[3] }}</small>
-    <p>{{ post[1] }}</p>
 
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="emoji-display">{{ post[2] }}</div>
+        <small>👤 {{ post[3] }}</small>
+    </div>
+
+    <p style="margin-top:5px;">{{ post[1] }}</p>
+
+    <!-- Like -->
     <div class="like-row">
         <a href="/like/{{ post[0] }}">❤️ Like</a>
         <span>{{ post[4] }} Likes</span>
     </div>
 
+    <!-- Comments -->
     <div class="comments">
         {% for c in comments %}
             {% if c[1]|int == post[0]|int %}
                 <div class="comment">
-                    <b>{{ c[2] }}</b>: {{ c[3] }}
+                    <b>{{ c[2] }}</b> {{ c[3] }}
                 </div>
             {% endif %}
         {% endfor %}
     </div>
 
+    <!-- Reply -->
     <form action="/comment/{{ post[0] }}" method="post">
         <input name="comment" placeholder="Write a reply..." required>
         <button>Reply</button>
     </form>
+
 </div>
 {% endfor %}
 
