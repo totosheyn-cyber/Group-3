@@ -3,12 +3,10 @@ import sqlite3
 from datetime import timedelta
 
 app = Flask(__name__)
-
-# 🔐 IMPORTANT: keep this constant
 app.secret_key = "anonymous-confession-secret-key"
-
-# ⏳ Session lifetime (unlimited devices)
 app.permanent_session_lifetime = timedelta(days=30)
+
+ADMIN_USERNAME = "admin"
 
 # ---------------- DATABASE ----------------
 def get_db():
@@ -59,7 +57,7 @@ def create_tables():
 
 create_tables()
 
-# ---------------- LANDING PAGE (INSTRUCTIONS) ----------------
+# ---------------- LANDING ----------------
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -92,10 +90,7 @@ def login():
 
         db = get_db()
         c = db.cursor()
-        c.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (u, p)
-        )
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (u, p))
         user = c.fetchone()
         db.close()
 
@@ -105,7 +100,7 @@ def login():
             session["welcome"] = True
             return redirect("/feed")
 
-        return "Invalid username or password"
+        return "Invalid login"
 
     return render_template("login.html")
 
@@ -122,25 +117,22 @@ def feed():
     if not session.get("user"):
         return redirect("/login")
 
-    # ---- CREATE POST (POST → REDIRECT → GET) ----
     if request.method == "POST":
         msg = request.form.get("message")
         emoji = request.form.get("emoji")
-        user = session["user"]
 
         if msg and emoji:
             db = get_db()
             c = db.cursor()
             c.execute(
-                "INSERT INTO posts (message, emoji, username, likes) VALUES (?, ?, ?, 0)",
-                (msg, emoji, user)
+                "INSERT INTO posts (message, emoji, username) VALUES (?, ?, ?)",
+                (msg, emoji, session["user"])
             )
             db.commit()
             db.close()
 
-        return redirect("/feed")  # 🚀 prevents double post
+        return redirect("/feed")  # prevent double post
 
-    # ---- LOAD DATA ----
     db = get_db()
     c = db.cursor()
 
@@ -173,7 +165,6 @@ def comment(post_id):
         return redirect("/login")
 
     text = request.form.get("comment")
-    user = session["user"]
 
     if not text:
         return redirect("/feed")
@@ -183,63 +174,13 @@ def comment(post_id):
 
     c.execute(
         "INSERT INTO comments (post_id, username, comment) VALUES (?, ?, ?)",
-        (post_id, user, text)
+        (post_id, session["user"], text)
     )
 
     c.execute("SELECT username FROM posts WHERE id=?", (post_id,))
-    row = c.fetchone()
+    owner = c.fetchone()
 
-    if row and row[0] != user:
+    if owner and owner[0] != session["user"]:
         c.execute(
-            "INSERT INTO notifications (username, text, seen) VALUES (?, ?, 0)",
-            (row[0], f"{user} replied to your post")
-        )
-
-    db.commit()
-    db.close()
-
-    return redirect("/feed")
-
-# ---------------- LIKE ----------------
-@app.route("/like/<int:post_id>")
-def like(post_id):
-    db = get_db()
-    c = db.cursor()
-    c.execute("UPDATE posts SET likes = likes + 1 WHERE id=?", (post_id,))
-    db.commit()
-    db.close()
-    return redirect("/feed")
-
-# ---------------- PROFILE ----------------
-@app.route("/profile")
-def profile():
-    if not session.get("user"):
-        return redirect("/login")
-
-    user = session["user"]
-    db = get_db()
-    c = db.cursor()
-
-    c.execute("SELECT * FROM posts WHERE username=? ORDER BY id DESC", (user,))
-    posts = c.fetchall()
-
-    c.execute(
-        "SELECT * FROM notifications WHERE username=? ORDER BY id DESC",
-        (user,)
-    )
-    notifications = c.fetchall()
-
-    c.execute("UPDATE notifications SET seen=1 WHERE username=?", (user,))
-    db.commit()
-    db.close()
-
-    return render_template(
-        "profile.html",
-        user=user,
-        posts=posts,
-        notifications=notifications
-    )
-
-# ---------------- RUN ----------------
-if __name__ == "__main__":
-    app.run(debug=True)
+            "INSERT INTO notifications (username, text) VALUES (?, ?)",
+            (owner[0], f

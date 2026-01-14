@@ -2,20 +2,35 @@
 <html>
 <head>
     <title>Admin Panel</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<h1>🔧 Admin Panel</h1>
+<div class="top-bar">
+    <div>🔐 Admin Panel</div>
+    <a href="/feed">⬅ Back</a>
+</div>
 
+<h2>📝 Posts</h2>
 {% for post in posts %}
 <div class="post-box">
-    <p>{{ post[1] }}</p>
-    <small>❤️ {{ post[2] }} Likes</small>
-    <br><br>
-    <a href="/delete/{{ post[0] }}">
-        <button>Delete</button>
+    {{ post[2] }} {{ post[1] }}<br>
+    <small>By: {{ post[3] }}</small><br><br>
+    <a href="/admin/delete_post/{{ post[0] }}">
+        <button style="background:#ff4d4d;">Delete Post</button>
+    </a>
+</div>
+{% endfor %}
+
+<hr>
+
+<h2>💬 Comments</h2>
+{% for c in comments %}
+<div class="post-box">
+    <b>{{ c[2] }}</b>: {{ c[3] }}<br><br>
+    <a href="/admin/delete_comment/{{ c[0] }}">
+        <button style="background:#ff4d4d;">Delete Comment</button>
     </a>
 </div>
 {% endfor %}
